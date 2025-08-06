@@ -1,0 +1,411 @@
+<?php
+session_start();
+// Scholar only access
+if (!isset($_SESSION['role']) || $_SESSION['role'] != 'scholar') {
+    header("Location: ../login.php");
+    exit;
+}
+require_once '../inc/db.php';
+$scholar_id = $_SESSION['user_id'];
+// Stats
+$courses = $db->query("SELECT COUNT(*) as count FROM courses WHERE scholar_id = $scholar_id")->fetch_assoc()['count'];
+$questions = $db->query("SELECT COUNT(*) as count FROM questions WHERE scholar_id = $scholar_id")->fetch_assoc()['count'];
+$answers = $db->query("SELECT COUNT(*) as count FROM questions WHERE scholar_id = $scholar_id AND answer IS NOT NULL AND answer != ''")->fetch_assoc()['count'];
+// Scholar info
+$stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->bind_param('i', $scholar_id);
+$stmt->execute();
+$scholar = $stmt->get_result()->fetch_assoc();
+// Fetch all courses uploaded by this scholar
+$courses_list = [];
+$courses_result = $db->query("SELECT * FROM courses WHERE scholar_id = $scholar_id ORDER BY created_at DESC");
+while ($row = $courses_result->fetch_assoc()) {
+    $courses_list[] = $row;
+}
+?>
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard ya Sheikh</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: #f0f8f5;
+      min-height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #155724;
+    }
+    .wrapper {
+      display: flex;
+      min-height: 100vh;
+      flex-wrap: nowrap;
+    }
+    #sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, #28a745, #1e7e34);
+      color: #fff;
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 3px 0 10px rgba(0,0,0,0.1);
+      transition: width 0.3s ease;
+    }
+    #sidebar .avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #c3e6cb;
+      color: #155724;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    #sidebar .scholar-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.1rem;
+      text-align: center;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    #sidebar .role-badge {
+      font-size: 0.9rem;
+      background: rgba(255 255 255 / 0.3);
+      color: #e9f7ef;
+      border-radius: 15px;
+      padding: 0.4rem 1rem;
+      margin-bottom: 2.5rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      user-select: none;
+    }
+    #sidebar ul.nav {
+      width: 100%;
+      padding-left: 0;
+      list-style: none;
+      margin: 0;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    #sidebar ul.nav li {
+      width: 100%;
+    }
+    #sidebar ul.nav li a.nav-link {
+      color: #d4f1d4;
+      font-weight: 600;
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      text-decoration: none;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      user-select: none;
+      box-shadow: inset 0 0 0 0 transparent;
+    }
+    #sidebar ul.nav li a.nav-link.active,
+    #sidebar ul.nav li a.nav-link:hover,
+    #sidebar ul.nav li a.nav-link:focus {
+      background-color: #ffffff30;
+      color: #e9f7ef;
+      box-shadow: inset 5px 0 0 #fff;
+      font-weight: 700;
+    }
+
+    #sidebar ul.nav li a.nav-link i {
+      font-size: 1.25rem;
+      min-width: 25px;
+      text-align: center;
+    }
+
+    #content {
+      flex-grow: 1;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      box-shadow: inset 0 0 10px #e0e0e0;
+    }
+    #header {
+      height: 70px;
+      background: #28a745;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 2.5rem;
+      font-weight: 700;
+      font-size: 1.3rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      user-select: none;
+    }
+    #header .header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #c3e6cb;
+      color: #155724;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-right: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    main.container-fluid {
+      padding: 2rem 3rem 3rem 3rem;
+      flex-grow: 1;
+    }
+    main.container-fluid h3 {
+      color: #19692c;
+      font-weight: 800;
+      margin-bottom: 0.6rem;
+      user-select: none;
+    }
+    main.container-fluid p.lead {
+      color: #3a6e3f;
+      font-size: 1.15rem;
+      margin-bottom: 2rem;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 1.8rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+    }
+    .stats-card {
+      flex: 1 1 210px;
+      background: #d4edda;
+      border-radius: 14px;
+      box-shadow: 0 3px 12px rgba(40,167,69,0.3);
+      padding: 1.6rem 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      border: 1.5px solid #c3e6cb;
+      transition: box-shadow 0.3s, transform 0.3s;
+      color: #155724;
+      cursor: default;
+      user-select: none;
+    }
+    .stats-card:hover {
+      box-shadow: 0 10px 28px rgba(40,167,69,0.5);
+      transform: translateY(-5px) scale(1.06);
+    }
+    .stats-icon {
+      font-size: 2.3rem;
+      color: #155724;
+      background: #c3e6cb;
+      border-radius: 50%;
+      padding: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .stats-card div > div.fw-bold {
+      font-size: 1.05rem;
+      margin-bottom: 0.15rem;
+    }
+    .stats-card div > div.fs-4 {
+      font-weight: 700;
+      font-size: 1.9rem;
+    }
+
+    /* Table */
+    table.table {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.07);
+      user-select: none;
+    }
+    thead.table-success {
+      background: #28a745;
+      color: white;
+      font-weight: 700;
+      user-select: none;
+    }
+    tbody tr:hover {
+      background-color: #e6f4ea !important;
+      cursor: pointer;
+    }
+    tbody td {
+      vertical-align: middle;
+    }
+    tbody td a {
+      text-decoration: none;
+      color: #28a745;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    tbody td a:hover {
+      color: #1e7e34;
+    }
+    .btn-outline-primary {
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    .btn-outline-primary:hover {
+      background-color: #28a745;
+      color: white;
+      box-shadow: 0 4px 12px rgba(40,167,69,0.7);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .wrapper {
+        flex-direction: column;
+      }
+      #sidebar {
+        width: 100%;
+        padding: 1rem 0.5rem;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+      }
+      #sidebar .avatar,
+      #sidebar .scholar-name,
+      #sidebar .role-badge {
+        display: none;
+      }
+      #sidebar ul.nav {
+        flex-direction: row;
+        gap: 1rem;
+        flex-grow: 0;
+      }
+      #sidebar ul.nav li {
+        margin-bottom: 0;
+        flex-grow: 1;
+        text-align: center;
+      }
+      #content {
+        min-height: auto;
+      }
+      #header {
+        padding: 0 1rem;
+        font-size: 1.1rem;
+        justify-content: center;
+      }
+      main.container-fluid {
+        padding: 1rem 1rem 2rem 1rem;
+      }
+      .stats-row {
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <nav id="sidebar" aria-label="Main navigation">
+      <div class="avatar"><i class="fas fa-user"></i></div>
+      <div class="scholar-name"><?= htmlspecialchars($scholar['name'] ?? 'Sheikh') ?></div>
+      <span class="role-badge">Sheikh</span>
+      <ul class="nav">
+        <li><a href="scholar.php" class="nav-link active" aria-current="page"><i class="fas fa-home"></i> Kwenye Dashboard</a></li>
+        <li><a href="upload_course.php" class="nav-link"><i class="fas fa-upload"></i> Pakia Kozi</a></li>
+        <li><a href="scholar_questions.php" class="nav-link"><i class="fas fa-question-circle"></i> Angalia Maswali</a></li>
+        <li><a href="upload_mcq.php" class="nav-link"><i class="fas fa-pen-nib"></i> Tunga Quiz</a></li>
+        <li><a href="view_mcq_results.php" class="nav-link"><i class="fas fa-chart-bar"></i> Matokeo ya Quiz</a></li>
+        <li><a href="scholar_profile.php" class="nav-link"><i class="fas fa-user"></i> Profaili Yangu</a></li>
+        <li><a href="scholar_settings.php" class="nav-link"><i class="fas fa-cog"></i> Mipangilio</a></li>
+        <li><a href="../logout.php" class="nav-link text-danger"><i class="fas fa-sign-out-alt"></i> Toka</a></li>
+      </ul>
+    </nav>
+
+    <div id="content" role="main">
+      <header id="header">
+        <span class="header-avatar"><i class="fas fa-user"></i></span>
+        <span>Karibu, <?= htmlspecialchars($scholar['name'] ?? 'Sheikh') ?></span>
+      </header>
+      <main class="container-fluid" tabindex="0">
+        <div class="stats-row" role="region" aria-label="Takwimu za Sheikh">
+          <div class="stats-card" tabindex="0">
+            <span class="stats-icon"><i class="fas fa-book"></i></span>
+            <div>
+              <div class="fw-bold">Kozi Ulizoweka</div>
+              <div class="fs-4"><?= $courses ?></div>
+            </div>
+          </div>
+          <div class="stats-card" tabindex="0">
+            <span class="stats-icon"><i class="fas fa-question-circle"></i></span>
+            <div>
+              <div class="fw-bold">Maswali ya Kozi</div>
+              <div class="fs-4"><?= $questions ?></div>
+            </div>
+          </div>
+          <div class="stats-card" tabindex="0">
+            <span class="stats-icon"><i class="fas fa-check-circle"></i></span>
+            <div>
+              <div class="fw-bold">Majibu Uliyotoa</div>
+              <div class="fs-4"><?= $answers ?></div>
+            </div>
+          </div>
+        </div>
+
+        <section class="mb-5">
+          <h3>Dashboard ya Sheikh</h3>
+          <p class="lead">Hii ni paneli yako ya Sheikh. Unaweza kupakia kozi, kujibu maswali, na kudhibiti taarifa zako binafsi. Karibu!</p>
+        </section>
+
+        <?php if (!empty($courses_list)): ?>
+          <section aria-label="Orodha ya kozi ulizopakia">
+            <h4 class="mb-3">Kozi Ulizopakia</h4>
+            <div class="table-responsive shadow-sm rounded">
+              <table class="table table-bordered table-hover bg-white align-middle text-nowrap">
+                <thead class="table-success">
+                  <tr>
+                    <th>Kichwa cha Kozi</th>
+                    <th>Tarehe ya Kupakia</th>
+                    <th>Status</th>
+                    <th>Document</th>
+                    <th>Hariri</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($courses_list as $course): ?>
+                    <tr>
+                      <td><?= htmlspecialchars($course['title']) ?></td>
+                      <td><?= date('d M Y', strtotime($course['created_at'])) ?></td>
+                      <td><?= htmlspecialchars(ucfirst($course['status'])) ?></td>
+                      <td>
+                        <?php if (!empty($course['document_url'])): ?>
+                          <a href="../<?= htmlspecialchars($course['document_url']) ?>" target="_blank" rel="noopener noreferrer" class="text-success fw-semibold">Pakua Document</a>
+                        <?php else: ?>
+                          <span class="text-muted fst-italic">Hakuna</span>
+                        <?php endif; ?>
+                      </td>
+                      <td>
+                        <a href="edit_course.php?id=<?= (int)$course['id'] ?>" class="btn btn-sm btn-outline-primary" aria-label="Hariri kozi: <?= htmlspecialchars($course['title']) ?>">Hariri</a>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        <?php else: ?>
+          <p class="text-muted fst-italic">Bado hujapakia kozi yoyote.</p>
+        <?php endif; ?>
+      </main>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
