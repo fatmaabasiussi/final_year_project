@@ -202,11 +202,7 @@ $conn->close();
           <i class="fas fa-book me-2"></i> Kozi Zangu
         </a>
       </li>
-      <li class="nav-item mb-2">
-        <a href="take_mcq.php" class="nav-link d-flex align-items-center px-3 py-2 rounded <?= basename($_SERVER['PHP_SELF']) == 'take_mcq.php' ? 'active' : '' ?>">
-          <i class="fas fa-pencil-alt me-2"></i> Jibu Maswali ya MCQ
-        </a>
-      </li>
+    
       <li class="nav-item mb-2">
         <a href="my_mcq_results.php" class="nav-link d-flex align-items-center px-3 py-2 rounded <?= basename($_SERVER['PHP_SELF']) == 'my_mcq_results.php' ? 'active' : '' ?>">
           <i class="fas fa-chart-bar me-2"></i> Matokeo Yangu ya MCQ
@@ -275,15 +271,21 @@ $conn->close();
                                 <?php if (!empty($course['document_url'])): ?>
                                     <p class="mb-2">
                                         <i class="fas fa-file-alt text-primary me-2"></i>
+                                        
                                         <a href="../<?= htmlspecialchars($course['document_url']) ?>" target="_blank" class="text-decoration-underline">Pakua Document ya Kozi</a>
                                     </p>
                                 <?php endif; ?>
                                 <div class="text-end mt-3">
                                     <?php if (in_array($course['id'], $enrolled_courses)): ?>
+                                        <a href="take_mcq.php?course_id=<?= $course['id'] ?>" class="btn btn-sm btn-primary">Jibu MCQ</a>
                                         <a href="view_course.php?id=<?= $course['id'] ?>" class="btn btn-continue">
                                             Endelea na Kozi <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
                                     <?php else: ?>
+                                        <a href="take_mcq.php?course_id=<?= $course['id'] ?>" class="btn btn-sm btn-primary">
+  Jibu MCQ
+</a>
+
                                         <a href="my_courses.php?enroll=<?= $course['id'] ?>" class="btn btn-success">
                                             Jiunge na Kozi <i class="fas fa-plus ms-2"></i>
                                         </a>

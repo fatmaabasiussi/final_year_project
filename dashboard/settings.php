@@ -141,11 +141,7 @@ $user = $result->fetch_assoc();
           <i class="fas fa-book me-2"></i> Kozi Zangu
         </a>
       </li>
-      <li class="nav-item mb-2">
-        <a href="take_mcq.php" class="nav-link d-flex align-items-center px-3 py-2 rounded <?= basename($_SERVER['PHP_SELF']) == 'take_mcq.php' ? 'active' : '' ?>">
-          <i class="fas fa-pencil-alt me-2"></i> Jibu Maswali ya MCQ
-        </a>
-      </li>
+  
       <li class="nav-item mb-2">
         <a href="my_mcq_results.php" class="nav-link d-flex align-items-center px-3 py-2 rounded <?= basename($_SERVER['PHP_SELF']) == 'my_mcq_results.php' ? 'active' : '' ?>">
           <i class="fas fa-chart-bar me-2"></i> Matokeo Yangu ya MCQ
