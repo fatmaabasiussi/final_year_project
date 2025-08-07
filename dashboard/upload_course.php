@@ -364,7 +364,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt"
             />
           </div>
-
           <div class="mb-3">
             <label for="status" class="form-label">Status</label>
             <select

@@ -192,6 +192,11 @@ $user = $result->fetch_assoc();
     <i class="fas fa-list-alt me-3"></i> Simamia Maswali ya MCQ
   </a>
 </li>
+<li class="nav-item mb-3">
+  <a href="report.php" class="nav-link d-flex align-items-center rounded <?= basename($_SERVER['PHP_SELF']) == 'report.php' ? 'active' : '' ?>">
+    <i class="fas fa-chart-pie me-3"></i> Ripoti ya Mfumo
+  </a>
+</li>
     <li class="nav-item mb-3">
       <a href="admin_profile.php" class="nav-link d-flex align-items-center rounded <?= basename($_SERVER['PHP_SELF']) == 'admin_profile.php' ? 'active' : '' ?>">
         <i class="fas fa-user me-3"></i> Profaili
