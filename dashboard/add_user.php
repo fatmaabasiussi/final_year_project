@@ -1,5 +1,7 @@
 <?php
-include '../inc/db.php'; // DB connection
+include '../includes/Database.php';
+
+$Database = Database::getInstance()->getConnection();
 
 // Initialize error and success messages
 $errors = [];
@@ -28,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Check if email already exists
-    $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt = $Database->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $stmt->store_result();
@@ -42,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
         // Insert user
-        $stmt = $db->prepare("INSERT INTO users (name, email, phone, role, password) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $Database->prepare("INSERT INTO users (name, email, phone, role, password) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("sssss", $name, $email, $phone, $role, $passwordHash);
 
         if ($stmt->execute()) {

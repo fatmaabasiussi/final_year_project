@@ -1,5 +1,8 @@
 <?php 
-include '../inc/db.php';
+require_once '../includes/Database.php';  // badilisha path kwa database connection file yako
+
+$Database = Database::getInstance()->getConnection();
+
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -36,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Tafadhali jaza masuala yote muhimu.";
     } else {
         // Insert course into database
-        $stmt = $db->prepare("INSERT INTO courses (title, description, image, document_url, status, scholar_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+        $stmt = $Database->prepare("INSERT INTO courses (title, description, image_url, document_url, status, scholar_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
         $stmt->bind_param("sssssi", $title, $description, $image, $document_path, $status, $scholar_id);
         if ($stmt->execute()) {
             header("Location: manage_course.php?msg=added");
@@ -48,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch scholars for dropdown
-$scholars_result = $db->query("SELECT id, name FROM users WHERE role = 'scholar' ORDER BY name ASC");
+$scholars_result = $Database->query("SELECT id, name FROM users WHERE role = 'scholar' ORDER BY name ASC");
 ?>
 
 <!DOCTYPE html>

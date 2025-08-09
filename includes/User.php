@@ -26,6 +26,22 @@ class User
         }
         return null;
     }
+    public static function updateLastLogin(int $userId): void
+{
+    $conn = Database::getInstance()->getConnection();
+    $stmt = $conn->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $stmt->close();
+}
+public static function updateLastLogout(int $userId): void
+{
+    $conn = Database::getInstance()->getConnection();
+    $stmt = $conn->prepare("UPDATE users SET last_logout = NOW() WHERE id = ?");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $stmt->close();
+}
 
     public static function emailExists(string $email): bool
     {
