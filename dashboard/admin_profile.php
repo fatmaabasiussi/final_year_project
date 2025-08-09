@@ -1,14 +1,12 @@
 <?php
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "1234", "religion_db");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../includes/functions.php';
+$conn = Database::getInstance()->getConnection();
 
 $admin_id = $_SESSION['user_id'];
 $query = $conn->prepare("SELECT * FROM users WHERE id = ?");

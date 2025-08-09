@@ -2,11 +2,12 @@
 session_start();
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "1234", "religion_db");
+require_once __DIR__ . '/../includes/functions.php';
+$conn = Database::getInstance()->getConnection();
 
 // Ongeza au hariri maswali itakapotumwa fom
 $message = '';

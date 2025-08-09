@@ -1,53 +1,36 @@
 <?php
 session_start();
-$error = "";
 
-// Success message from registration
+require_once __DIR__ . '/includes/functions.php';
+
+$error = "";
 $success = "";
 if (isset($_SESSION['success'])) {
     $success = $_SESSION['success'];
     unset($_SESSION['success']);
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    $conn = new mysqli("localhost", "root", "1234", "religion_db");
-
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
-
-    $sql = "SELECT * FROM users WHERE email = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows == 1) {
-        $user = $result->fetch_assoc();
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['role'] = $user['role'];
-            $_SESSION['name'] = $user['name'];
-
-            if ($user['role'] == 'admin') {
-                header("Location: dashboard/admin.php");
-            } elseif ($user['role'] == 'scholar') {
-                header("Location: dashboard/scholar.php");
+    try {
+        if (Auth::login($email, $password)) {
+            $role = $_SESSION['role'] ?? 'user';
+            if ($role === 'admin') {
+                header('Location: dashboard/admin.php');
+            } elseif ($role === 'scholar') {
+                header('Location: dashboard/scholar.php');
             } else {
-                header("Location: dashboard/user.php");
+                header('Location: dashboard/user.php');
             }
             exit();
         } else {
-            $error = "Nenosiri si sahihi.";
+            $error = 'Nenosiri si sahihi au mtumiaji hajapatikana.';
         }
-    } else {
-        $error = "Mtumiaji hajapatikana.";
+    } catch (Throwable $e) {
+        $error = 'Hitilafu ya mfumo. Tafadhali jaribu tena.';
     }
-
-    $conn->close();
 }
 ?>
 
@@ -268,3 +251,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

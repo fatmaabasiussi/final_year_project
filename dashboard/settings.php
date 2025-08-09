@@ -3,14 +3,12 @@ session_start();
 
 // Ruhusu user pekee (role = 'user')
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'user') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "1234", "religion_db");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../includes/functions.php';
+$conn = Database::getInstance()->getConnection();
 
 $user_id = $_SESSION['user_id'];
 $role = $_SESSION['role'];  // Hapa ni 'user' tu

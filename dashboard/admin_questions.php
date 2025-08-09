@@ -3,15 +3,12 @@ session_start();
 
 // Check if user is logged in and is an admin
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit();
 }
 
-$conn = new mysqli("localhost", "root", "1234", "religion_db");
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../includes/functions.php';
+$conn = Database::getInstance()->getConnection();
 
 $msg = '';
 $msg_type = '';

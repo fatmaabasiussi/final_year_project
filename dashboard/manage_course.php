@@ -1,11 +1,13 @@
 <?php
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit();
 }
 
-include '../inc/db.php';
+require_once __DIR__ . '/../includes/functions.php';
+$db = Database::getInstance()->getConnection();
+require_once __DIR__ . '/../includes/Course.php';
 
 // Delete Course
 if(isset($_GET['delete'])){
@@ -25,6 +27,14 @@ $result = $db->query("
     JOIN users u ON c.scholar_id = u.id 
     ORDER BY c.created_at DESC
 ");
+
+// Build array from result set
+$courses = [];
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $courses[] = $row;
+    }
+}
 
 // Get stats
 $stats = [
@@ -254,10 +264,15 @@ $stats = [
       </a>
     </li>
     <li class="nav-item mb-3">
-  <a href="manage_mcq.php" class="nav-link d-flex align-items-center rounded <?= basename($_SERVER['PHP_SELF']) == 'manage_mcq.php' ? 'active' : '' ?>">
-    <i class="fas fa-list-alt me-3"></i> Simamia Maswali ya MCQ
-  </a>
-</li>
+      <a href="manage_mcq.php" class="nav-link d-flex align-items-center rounded <?= basename($_SERVER['PHP_SELF']) == 'manage_mcq.php' ? 'active' : '' ?>">
+        <i class="fas fa-list-alt me-3"></i> Simamia Maswali ya MCQ
+      </a>
+    </li>
+    <li class="nav-item mb-3">
+      <a href="report.php" class="nav-link d-flex align-items-center rounded <?= basename($_SERVER['PHP_SELF']) == 'report.php' ? 'active' : '' ?>">
+        <i class="fas fa-chart-pie me-3"></i> Ripoti ya Mfumo
+      </a>
+    </li>
     <li class="nav-item mb-3">
       <a href="admin_profile.php" class="nav-link d-flex align-items-center rounded <?= basename($_SERVER['PHP_SELF']) == 'admin_profile.php' ? 'active' : '' ?>">
         <i class="fas fa-user me-3"></i> Profaili
@@ -374,12 +389,13 @@ $stats = [
             </div>
             <div class="card-body">
                 <div class="row g-4">
-                    <?php while($course = $result->fetch_assoc()): ?>
+                    <?php foreach ($courses as $course): ?>
                     <div class="col-md-6 col-lg-4 d-flex">
                         <div class="card course-card position-relative w-100">
-                            <img src="<?= htmlspecialchars($course['image'] ?? '../assets/img/course-default.jpg') ?>" 
-                                 class="card-img-top course-image" 
-                                 alt="<?= htmlspecialchars($course['title']) ?>">
+                         <img src="../<?= htmlspecialchars($course['image_url'] ?? 'assets/img/course-default.jpg') ?>" 
+     class="card-img-top course-image" 
+     alt="<?= htmlspecialchars($course['title']) ?>">
+
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title mb-1"><?= htmlspecialchars($course['title']) ?></h5>
                                 <p class="text-muted mb-2">
@@ -393,6 +409,20 @@ $stats = [
                                     <?php else: ?>
                                         <span class="text-muted">Hakuna document</span>
                                     <?php endif; ?>
+                                    <?php if (!empty($course['video_url'])): ?>
+    <div class="mt-1">
+        <i class="fas fa-video text-danger me-2"></i>
+        <a href="../<?= htmlspecialchars($course['video_url']) ?>" target="_blank" class="text-decoration-underline">Tazama Video</a>
+    </div>
+<?php endif; ?>
+
+<?php if (!empty($course['audio_url'])): ?>
+    <div class="mt-1">
+        <i class="fas fa-headphones text-success me-2"></i>
+        <a href="../<?= htmlspecialchars($course['audio_url']) ?>" target="_blank" class="text-decoration-underline">Sikiliza Audio</a>
+    </div>
+<?php endif; ?>
+
                                 </p>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="badge bg-primary">
@@ -419,8 +449,8 @@ $stats = [
                             </span>
                         </div>
                     </div>
-                    <?php endwhile; ?>
-                    <?php if ($result->num_rows === 0): ?>
+                    <?php endforeach; ?>
+                    <?php if (empty($courses)): ?>
                         <p class="text-muted">No courses found.</p>
                     <?php endif; ?>
                 </div>

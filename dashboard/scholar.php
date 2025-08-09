@@ -2,10 +2,11 @@
 session_start();
 // Scholar only access
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'scholar') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit;
 }
-require_once '../inc/db.php';
+require_once __DIR__ . '/../includes/functions.php';
+$db = Database::getInstance()->getConnection();
 $scholar_id = $_SESSION['user_id'];
 // Stats
 $courses = $db->query("SELECT COUNT(*) as count FROM courses WHERE scholar_id = $scholar_id")->fetch_assoc()['count'];

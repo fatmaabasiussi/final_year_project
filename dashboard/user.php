@@ -3,22 +3,22 @@ session_start();
 
 // Ruhusu user tu
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'user') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "1234", "religion_db");
+require_once __DIR__ . '/../includes/functions.php';
+$conn = Database::getInstance()->getConnection();
+require_once __DIR__ . '/../includes/Course.php';
+require_once __DIR__ . '/../includes/Enrollment.php';
 
 $enrolled_msg = "";
 
 // Kujiunga na kozi
 if (isset($_GET['enroll'])) {
-    $course_id = $_GET['enroll'];
-    $user_id = $_SESSION['user_id'];
-
-    $check = $conn->query("SELECT * FROM enrollments WHERE user_id=$user_id AND course_id=$course_id");
-    if ($check->num_rows == 0) {
-        $conn->query("INSERT INTO enrollments (user_id, course_id) VALUES ($user_id, $course_id)");
+    $course_id = (int)$_GET['enroll'];
+    $user_id = (int)$_SESSION['user_id'];
+    if (Enrollment::enroll($user_id, $course_id)) {
         $enrolled_msg = "Umejiunga na kozi kikamilifu!";
     } else {
         $enrolled_msg = "Tayari umejiunga na kozi hii.";
@@ -26,11 +26,11 @@ if (isset($_GET['enroll'])) {
 }
 
 // Kozi zote
-$courses = $conn->query("SELECT c.*, u.name AS scholar FROM courses c JOIN users u ON c.scholar_id = u.id");
+$courses = Course::listWithScholar();
 
 // Kozi alizojiunga
-$user_id = $_SESSION['user_id'];
-$my_courses = $conn->query("SELECT c.* FROM enrollments e JOIN courses c ON e.course_id = c.id WHERE e.user_id = $user_id");
+$user_id = (int)$_SESSION['user_id'];
+$my_courses = Enrollment::listByUser($user_id);
 ?>
 
 <!DOCTYPE html>

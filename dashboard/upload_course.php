@@ -1,11 +1,11 @@
 <?php
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'scholar') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit;
 }
-require_once '../includes/functions.php';
-require_once '../inc/db.php';
+require_once __DIR__ . '/../includes/functions.php';
+$db = Database::getInstance()->getConnection();
 
 $scholar_id = $_SESSION['user_id'];
 $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
@@ -20,6 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $_POST['status'] ?? 'inactive';
     $image = $_FILES['image'] ?? null;
     $document = $_FILES['document'] ?? null;
+    $video = $_FILES['video'] ?? null;
+    $audio = $_FILES['audio'] ?? null;
 
     if ($title === '') {
         $error = 'Please fill all required fields.';
@@ -60,10 +62,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Invalid document type.';
             }
         }
+        // Video Upload
+$video_path = null;
+if ($video && $video['error'] === UPLOAD_ERR_OK) {
+    $ext = strtolower(pathinfo($video['name'], PATHINFO_EXTENSION));
+    $allowed_vid = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+    if (in_array($ext, $allowed_vid)) {
+        $new_vid_name = time() . '_video_' . uniqid() . '.' . $ext;
+        $vid_dir = '../uploads/courses/';
+        if (!is_dir($vid_dir)) mkdir($vid_dir, 0777, true);
+        $vid_dest = $vid_dir . $new_vid_name;
+        if (move_uploaded_file($video['tmp_name'], $vid_dest)) {
+            $video_path = 'uploads/courses/' . $new_vid_name;
+        } else {
+            $error = 'Video upload failed.';
+        }
+    } else {
+        $error = 'Invalid video type.';
+    }
+}
+
+// Audio Upload
+$audio_path = null;
+if ($audio && $audio['error'] === UPLOAD_ERR_OK) {
+    $ext = strtolower(pathinfo($audio['name'], PATHINFO_EXTENSION));
+    $allowed_audio = ['mp3', 'wav', 'aac', 'ogg', 'm4a'];
+    if (in_array($ext, $allowed_audio)) {
+        $new_audio_name = time() . '_audio_' . uniqid() . '.' . $ext;
+        $audio_dir = '../uploads/courses/';
+        if (!is_dir($audio_dir)) mkdir($audio_dir, 0777, true);
+        $audio_dest = $audio_dir . $new_audio_name;
+        if (move_uploaded_file($audio['tmp_name'], $audio_dest)) {
+            $audio_path = 'uploads/courses/' . $new_audio_name;
+        } else {
+            $error = 'Audio upload failed.';
+        }
+    } else {
+        $error = 'Invalid audio type.';
+    }
+}
+
 
         if (!$error) {
-            $stmt = $db->prepare("INSERT INTO courses (title, description, image_url, document_url, status, scholar_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
-            $stmt->bind_param('sssssi', $title, $description, $image_path, $document_path, $status, $scholar_id);
+            $stmt = $db->prepare("INSERT INTO courses (title, description, image_url, document_url, video_url, audio_url, status, scholar_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            $stmt->bind_param('sssssssi', $title, $description, $image_path, $document_path, $video_path, $audio_path, $status, $scholar_id);
             if ($stmt->execute()) {
                 $success = 'Course uploaded successfully!';
                 $_POST = [];
@@ -364,6 +406,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt"
             />
           </div>
+          <div class="mb-3">
+  <label for="video" class="form-label">Video ya Kozi</label>
+  <input
+    type="file"
+    id="video"
+    name="video"
+    class="form-control"
+    accept="video/*"
+  />
+</div>
+
+<div class="mb-3">
+  <label for="audio" class="form-label">Sauti ya Kozi (Audio)</label>
+  <input
+    type="file"
+    id="audio"
+    name="audio"
+    class="form-control"
+    accept="audio/*"
+  />
+</div>
           <div class="mb-3">
             <label for="status" class="form-label">Status</label>
             <select

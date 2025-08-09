@@ -1,13 +1,15 @@
 <?php
 session_start();
 
+require_once __DIR__ . '/../includes/functions.php';
+
 // Ruhusu admin tu
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "1234", "religion_db");
+$conn = Database::getInstance()->getConnection();
 
 // Fetch data
 $users = $conn->query("SELECT * FROM users WHERE role = 'user'");

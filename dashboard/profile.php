@@ -3,15 +3,12 @@ session_start();
 
 // Check if user is logged in and is a user (mwanafunzi) only
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit();
 }
 
-// Connect to the database
-$conn = new mysqli("localhost", "root", "1234", "religion_db");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+require_once __DIR__ . '/../includes/functions.php';
+$conn = Database::getInstance()->getConnection();
 
 // Fetch user info with additional details
 $user_id = $_SESSION['user_id'];

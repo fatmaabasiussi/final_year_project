@@ -1,7 +1,7 @@
 <?php 
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'user') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit();
 }
 if (!isset($_GET['id'])) {
@@ -12,42 +12,19 @@ if (!isset($_GET['id'])) {
 $course_id = $_GET['id'];
 $user_id = $_SESSION['user_id'];
 
-$conn = new mysqli("localhost", "root", "1234", "religion_db");
-if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+require_once __DIR__ . '/../includes/functions.php';
+$conn = Database::getInstance()->getConnection();
+require_once __DIR__ . '/../includes/Course.php';
 
-// Fetch course info
-$sql = "SELECT c.*, u.name as scholar_name, e.progress, e.last_accessed,
-        (SELECT COUNT(*) FROM course_modules WHERE course_id = c.id) as total_modules,
-        (SELECT COUNT(*) FROM module_completion WHERE user_id = ? AND module_id IN 
-            (SELECT id FROM course_modules WHERE course_id = c.id)
-        ) as completed_modules
-        FROM courses c
-        JOIN users u ON c.scholar_id = u.id
-        JOIN enrollments e ON c.id = e.course_id
-        WHERE c.id = ? AND e.user_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("iii", $user_id, $course_id, $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($result->num_rows === 0) {
+// Fetch course info via model
+$course = Course::findForUserWithProgress((int)$course_id, (int)$user_id);
+if (!$course) {
     header("Location: my_courses.php");
     exit();
 }
-$course = $result->fetch_assoc();
 
-// Get modules
-$modules_sql = "SELECT m.*, 
-                (SELECT completed_at FROM module_completion 
-                 WHERE user_id = ? AND module_id = m.id) as completed_at
-                FROM course_modules m 
-                WHERE m.course_id = ?
-                ORDER BY m.order_number";
-$modules_stmt = $conn->prepare($modules_sql);
-$modules_stmt->bind_param("ii", $user_id, $course_id);
-$modules_stmt->execute();
-$modules_result = $modules_stmt->get_result();
-$modules = [];
-while ($module = $modules_result->fetch_assoc()) $modules[] = $module;
+// Get modules via model
+$modules = Course::getModulesWithCompletion((int)$course_id, (int)$user_id);
 
 $conn->close();
 

@@ -1,11 +1,12 @@
 <?php
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'user') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit;
 }
 
-$conn = new mysqli("localhost", "root", "1234", "religion_db");
+require_once __DIR__ . '/../includes/functions.php';
+$conn = Database::getInstance()->getConnection();
 
 if (!isset($_GET['course_id'])) {
     echo "<div style='padding: 20px; color: red;'>Tafadhali chagua kozi kwanza.</div>";

@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit();
 }
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
@@ -9,7 +9,8 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     exit();
 }
 $id = (int)$_GET['id'];
-require_once '../inc/db.php';
+require_once __DIR__ . '/../includes/functions.php';
+$db = Database::getInstance()->getConnection();
 $sql = "SELECT q.*, u.name as user_name, c.title as course_title
         FROM questions q
         JOIN users u ON q.user_id = u.id

@@ -1,11 +1,12 @@
 <?php
 session_start();
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit();
 }
 
-include '../inc/db.php';
+require_once __DIR__ . '/../includes/functions.php';
+$db = Database::getInstance()->getConnection();
 
 // Delete Question
 if(isset($_GET['delete'])){

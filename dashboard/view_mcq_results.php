@@ -3,11 +3,12 @@ session_start();
 
 // Ruhusu Scholar pekee
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'scholar') {
-    header("Location: ../login.php");
+    header("Location: ../index.php");
     exit;
 }
 
-require_once '../inc/db.php';
+require_once __DIR__ . '/../includes/functions.php';
+$db = Database::getInstance()->getConnection();
 
 $scholar_id = $_SESSION['user_id'];
 

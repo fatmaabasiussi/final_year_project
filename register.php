@@ -1,49 +1,28 @@
 <?php
 session_start();
+require_once __DIR__ . '/includes/functions.php';
+
 $error = "";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
 
     if ($password !== $confirm_password) {
-        $error = "Nenosiri hazifanani. Tafadhali jaribu tena.";
+        $error = 'Nenosiri hazifanani. Tafadhali jaribu tena.';
     } else {
-        $conn = new mysqli("localhost", "root", "1234", "religion_db");
-
-        if ($conn->connect_error) {
-            die("Connection failed: " . $conn->connect_error);
+        try {
+            Auth::register($name, $email, $password);
+            $_SESSION['success'] = 'Umefanikiwa kujisajili! Tafadhali ingia.';
+            header('Location: index.php');
+            exit();
+        } catch (InvalidArgumentException $e) {
+            $error = 'Barua pepe tayari imetumika. Tafadhali tumia barua pepe nyingine.';
+        } catch (Throwable $e) {
+            $error = 'Kuna hitilafu imetokea. Tafadhali jaribu tena.';
         }
-
-        // Check if email already exists
-        $check_sql = "SELECT * FROM users WHERE email = ?";
-        $check_stmt = $conn->prepare($check_sql);
-        $check_stmt->bind_param("s", $email);
-        $check_stmt->execute();
-        $result = $check_stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            $error = "Barua pepe tayari imetumika. Tafadhali tumia barua pepe nyingine.";
-        } else {
-            // Hash password
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            
-            // Insert new user
-            $sql = "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'user')";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sss", $name, $email, $hashed_password);
-            
-            if ($stmt->execute()) {
-                $_SESSION['success'] = "Umefanikiwa kujisajili! Tafadhali ingia.";
-                header("Location: login.php");
-                exit();
-            } else {
-                $error = "Kuna hitilafu imetokea. Tafadhali jaribu tena.";
-            }
-        }
-        $conn->close();
     }
 }
 ?>
@@ -191,7 +170,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="login.php">Ingia</a>
+                        <a class="nav-link" href="index.php">Ingia</a>
                     </li>
                 </ul>
             </div>
@@ -250,7 +229,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     <button type="submit" class="btn btn-primary">Jisajili</button>
                     <div class="text-center">
-                        <a href="login.php" class="btn-link">Una akaunti? Ingia</a>
+                        <a href="index.php" class="btn-link">Una akaunti? Ingia</a>
                     </div>
                 </form>
             </div>
